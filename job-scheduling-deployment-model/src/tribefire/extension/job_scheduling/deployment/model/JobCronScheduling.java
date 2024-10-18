@@ -15,26 +15,24 @@
 // ============================================================================
 package tribefire.extension.job_scheduling.deployment.model;
 
+import java.util.TimeZone;
+
 import com.braintribe.model.descriptive.HasCredentials;
-import com.braintribe.model.extensiondeployment.ServiceProcessor;
-import com.braintribe.model.extensiondeployment.Worker;
-import com.braintribe.model.generic.annotation.Abstract;
 import com.braintribe.model.generic.reflection.EntityType;
 import com.braintribe.model.generic.reflection.EntityTypes;
 
 /**
  * <p>
- * This interface is designed to provide an extension point for running scheduled {@link Job Jobs} in an interval
- * defined by {@link #setCronExpression(String)}.
+ * This interface is designed to provide an extension point for running scheduled {@link Job Jobs} in an interval defined by
+ * {@link #setCronExpression(String)}.
  * 
  * <p>
- * As {@link HasCredentials} is defined, meaning that user credentials can be configured to define the execution scope
- * (in case user and password credentials are left empty, the internal default user session scope is used).
+ * As {@link HasCredentials} is defined, meaning that user credentials can be configured to define the execution scope (in case user and password
+ * credentials are left empty, the internal default user session scope is used).
  * 
  * <p>
- * In case the scheduler is unable to execute scheduled jobs (e.g. the scheduler shut down),
- * {@link #setCoalescing(boolean)} defines, if job executions are coalesced to avoid execution several times in
- * succession.
+ * In case the scheduler is unable to execute scheduled jobs (e.g. the scheduler shut down), {@link #setCoalescing(boolean)} defines, if job
+ * executions are coalesced to avoid execution several times in succession.
  */
 public interface JobCronScheduling extends JobScheduling {
 
@@ -45,4 +43,12 @@ public interface JobCronScheduling extends JobScheduling {
 	 */
 	void setCronExpression(String value);
 	String getCronExpression();
+
+	/**
+	 * The time zone ID to be used for the cron expression. If not specified, the system's default time zone will be used. See
+	 * {@link TimeZone#getTimeZone(String)} for details on the possible values.
+	 */
+	void setTimeZoneId(String timeZoneId);
+	String getTimeZoneId();
+
 }

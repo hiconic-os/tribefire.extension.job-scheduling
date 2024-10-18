@@ -16,6 +16,7 @@
 package tribefire.extension.job_scheduling.processing;
 
 import java.util.Map;
+import java.util.TimeZone;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.quartz.CronExpression;
@@ -47,6 +48,7 @@ import com.braintribe.model.securityservice.credentials.Credentials;
 import com.braintribe.model.securityservice.credentials.UserPasswordCredentials;
 import com.braintribe.model.securityservice.credentials.identification.UserNameIdentification;
 import com.braintribe.model.service.api.ServiceRequest;
+import com.braintribe.utils.StringTools;
 
 import tribefire.extension.job_scheduling.api.api.JobRequest;
 import tribefire.extension.job_scheduling.api.api.JobResponse;
@@ -101,6 +103,12 @@ public class QuartzScheduling implements Worker, InitializationAware {
 			JobDetail jobDetail = JobBuilder.newJob().ofType(DispatcherJob.class).withIdentity(key).build();
 
 			CronScheduleBuilder cronSchedule = CronScheduleBuilder.cronSchedule(deployable.getCronExpression());
+
+			String timeZoneId = deployable.getTimeZoneId();
+			if (!StringTools.isBlank(timeZoneId)) {
+				TimeZone tz = TimeZone.getTimeZone(timeZoneId);
+				cronSchedule = cronSchedule.inTimeZone(tz);
+			}
 
 			trigger = TriggerBuilder.newTrigger().withSchedule(cronSchedule).forJob(jobDetail).build();
 
@@ -246,9 +254,10 @@ public class QuartzScheduling implements Worker, InitializationAware {
 		if (deployable.getJobRequestProcessor() == null) {
 			throw new IllegalStateException("Deployment not successful, because jobRequestProcessor is not set on: " + this);
 		}
-		
+
 		if (deployable.getJobRequestProcessor().getExternalId() == null) {
-			throw new IllegalStateException("Deployment not successful, because jobRequestProcessor.externalId is not set on: " + deployable.getJobRequestProcessor());
+			throw new IllegalStateException(
+					"Deployment not successful, because jobRequestProcessor.externalId is not set on: " + deployable.getJobRequestProcessor());
 		}
 	}
 }
