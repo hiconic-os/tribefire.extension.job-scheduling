@@ -46,6 +46,10 @@ limitations under the License.
                     <artifactId>HikariCP-java6</artifactId>
                 </exclusion>
                 <exclusion>
+                    <groupId>com.zaxxer</groupId>
+                    <artifactId>HikariCP-java7</artifactId>
+                </exclusion>
+                <exclusion>
                     <groupId>org.slf4j</groupId>
                     <artifactId>*</artifactId>
                 </exclusion>
