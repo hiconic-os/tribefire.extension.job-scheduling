@@ -15,11 +15,21 @@
 // ============================================================================
 package tribefire.extension.jobscheduling.job_scheduling_quartz.wire.space;
 
+import static com.braintribe.wire.api.scope.InstanceConfiguration.currentInstance;
+
+import org.quartz.Scheduler;
+import org.quartz.SchedulerException;
+import org.quartz.impl.StdSchedulerFactory;
+
+import com.braintribe.exception.Exceptions;
+import com.braintribe.logging.Logger;
+import com.braintribe.model.processing.deployment.api.ExpertContext;
 import com.braintribe.model.processing.deployment.api.binding.DenotationBindingBuilder;
 import com.braintribe.wire.api.annotation.Import;
 import com.braintribe.wire.api.annotation.Managed;
 
 import tribefire.extension.job_scheduling.deployment.model.JobCronScheduling;
+import tribefire.extension.job_scheduling.processing.QuartzScheduling;
 import tribefire.module.wire.contract.TribefireModuleContract;
 import tribefire.module.wire.contract.TribefireWebPlatformContract;
 
@@ -29,16 +39,47 @@ import tribefire.module.wire.contract.TribefireWebPlatformContract;
 @Managed
 public class JobSchedulingQuartzModuleSpace implements TribefireModuleContract {
 
+	private static final Logger log = Logger.getLogger(JobSchedulingQuartzModuleSpace.class);
+
 	@Import
 	private TribefireWebPlatformContract tfPlatform;
 
-	@Import
-	private QuartzSpace quartz;
-
 	@Override
 	public void bindDeployables(DenotationBindingBuilder bindings) {
+		bindings.bind(JobCronScheduling.T) //
+				.component(tfPlatform.binders().worker()) //
+				.expertFactory(this::quartzScheduling);
 
-		bindings.bind(JobCronScheduling.T).component(tfPlatform.binders().worker()).expertFactory(quartz::quartzScheduling);
 	}
 
+	@Managed
+	private QuartzScheduling quartzScheduling(ExpertContext<JobCronScheduling> context) {
+		QuartzScheduling bean = new QuartzScheduling();
+		bean.setDeployable(context.getDeployable());
+		bean.setRequestEvaluator(tfPlatform.requestUserRelated().evaluator());
+		bean.setUserSessionScoping(tfPlatform.masterUserAuthContext().userSessionScoping());
+		bean.setScheduler(scheduler());
+		return bean;
+	}
+
+	@Managed
+	private Scheduler scheduler() {
+		try {
+			Scheduler bean = StdSchedulerFactory.getDefaultScheduler();
+
+			currentInstance().onDestroy(() -> {
+				try {
+					bean.shutdown(true);
+				} catch (SchedulerException e) {
+					log.error("error while shutting down standard quartz scheduler", e);
+				}
+			});
+
+			bean.start();
+			return bean;
+
+		} catch (SchedulerException e) {
+			throw Exceptions.unchecked(e, "Error while creating quartz standard scheduler");
+		}
+	}
 }
