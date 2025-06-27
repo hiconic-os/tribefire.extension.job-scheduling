@@ -57,7 +57,7 @@ public class JobSchedulingQuartzModuleSpace implements TribefireModuleContract {
 		QuartzScheduling bean = new QuartzScheduling();
 		bean.setDeployable(context.getDeployable());
 		bean.setRequestEvaluator(tfPlatform.requestUserRelated().evaluator());
-		bean.setUserSessionScoping(tfPlatform.masterUserAuthContext().userSessionScoping());
+		bean.setUserSessionScoping(tfPlatform.systemUserRelated().userSessionScoping());
 		bean.setScheduler(scheduler());
 		return bean;
 	}
